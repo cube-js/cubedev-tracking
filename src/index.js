@@ -1,4 +1,3 @@
-import { fetch } from 'whatwg-fetch';
 import cookie from 'component-cookie';
 import uuidv4 from 'uuid/v4';
 
@@ -64,7 +63,12 @@ export const setAnonymousId = (anonymousId, props) => {
 };
 
 export const event = (name, params) => {
-  track({ event: name, ...params });
+  track({
+    event: name,
+    referrer: document.referrer,
+    ...window.location,
+    ...params
+  });
 };
 
 export const page = (params) => {

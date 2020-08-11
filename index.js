@@ -13,8 +13,6 @@ var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/de
 
 var _asyncToGenerator2 = _interopRequireDefault(require("@babel/runtime/helpers/asyncToGenerator"));
 
-var _whatwgFetch = require("whatwg-fetch");
-
 var _componentCookie = _interopRequireDefault(require("component-cookie"));
 
 var _v = _interopRequireDefault(require("uuid/v4"));
@@ -72,7 +70,7 @@ var track = /*#__PURE__*/function () {
                         _context.prev = 4;
                         sentAt = new Date().toJSON();
                         _context.next = 8;
-                        return (0, _whatwgFetch.fetch)('https://track.cube.dev/track', {
+                        return fetch('https://track.cube.dev/track', {
                           method: 'post',
                           body: JSON.stringify(toFlush.map(function (r) {
                             return _objectSpread(_objectSpread({}, r), {}, {
@@ -159,9 +157,10 @@ var setAnonymousId = function setAnonymousId(anonymousId, props) {
 exports.setAnonymousId = setAnonymousId;
 
 var event = function event(name, params) {
-  track(_objectSpread({
-    event: name
-  }, params));
+  track(_objectSpread(_objectSpread({
+    event: name,
+    referrer: document.referrer
+  }, window.location), params));
 };
 
 exports.event = event;
