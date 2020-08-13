@@ -6,10 +6,11 @@ let trackEvents = [];
 let baseProps = {};
 
 const COOKIE_ID = "cubedev_anonymous";
+const COOKIE_DOMAIN = ".cube.dev";
 
 const track = async (event) => {
   if (!cookie(COOKIE_ID)) {
-    cookie(COOKIE_ID, uuidv4());
+    cookie(COOKIE_ID, uuidv4(), { domain: COOKIE_DOMAIN });
   }
   trackEvents.push({
     ...baseProps,
