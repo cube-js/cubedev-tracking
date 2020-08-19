@@ -7,10 +7,11 @@ let baseProps = {};
 
 const COOKIE_ID = "cubedev_anonymous";
 const COOKIE_DOMAIN = ".cube.dev";
+const MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
 
 const track = async (event) => {
   if (!cookie(COOKIE_ID)) {
-    cookie(COOKIE_ID, uuidv4(), { domain: COOKIE_DOMAIN });
+    cookie(COOKIE_ID, uuidv4(), { domain: COOKIE_DOMAIN, maxage: MAX_AGE });
   }
   trackEvents.push({
     ...baseProps,
@@ -61,6 +62,10 @@ const track = async (event) => {
 export const setAnonymousId = (anonymousId, props) => {
   baseProps = props;
   track({ event: 'identify', anonymousId, ...props });
+};
+
+export const identify = (email) => {
+  track({ event: 'identify', email: email });
 };
 
 export const event = (name, params) => {

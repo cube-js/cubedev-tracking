@@ -5,7 +5,7 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.page = exports.event = exports.setAnonymousId = void 0;
+exports.page = exports.event = exports.identify = exports.setAnonymousId = void 0;
 
 var _regenerator = _interopRequireDefault(require("@babel/runtime/regenerator"));
 
@@ -25,6 +25,8 @@ var flushPromise = null;
 var trackEvents = [];
 var baseProps = {};
 var COOKIE_ID = "cubedev_anonymous";
+var COOKIE_DOMAIN = ".cube.dev";
+var MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
 
 var track = /*#__PURE__*/function () {
   var _ref = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee2(event) {
@@ -34,7 +36,10 @@ var track = /*#__PURE__*/function () {
         switch (_context2.prev = _context2.next) {
           case 0:
             if (!(0, _componentCookie["default"])(COOKIE_ID)) {
-              (0, _componentCookie["default"])(COOKIE_ID, (0, _v["default"])());
+              (0, _componentCookie["default"])(COOKIE_ID, (0, _v["default"])(), {
+                domain: COOKIE_DOMAIN,
+                maxage: MAX_AGE
+              });
             }
 
             trackEvents.push(_objectSpread(_objectSpread(_objectSpread({}, baseProps), event), {}, {
@@ -155,6 +160,15 @@ var setAnonymousId = function setAnonymousId(anonymousId, props) {
 };
 
 exports.setAnonymousId = setAnonymousId;
+
+var identify = function identify(email) {
+  track({
+    event: 'identify',
+    email: email
+  });
+};
+
+exports.identify = identify;
 
 var event = function event(name, params) {
   track(_objectSpread(_objectSpread({
