@@ -16,6 +16,8 @@ const track = async (event) => {
   trackEvents.push({
     ...baseProps,
     ...event,
+    referrer: document.referrer,
+    ...window.location,
     id: uuidv4(),
     clientAnonymousId: cookie(COOKIE_ID),
     clientTimestamp: new Date().toJSON()
@@ -69,19 +71,9 @@ export const identify = (email) => {
 };
 
 export const event = (name, params) => {
-  track({
-    event: name,
-    referrer: document.referrer,
-    ...window.location,
-    ...params
-  });
+  track({ event: name, ...params });
 };
 
 export const page = (params) => {
-  track({
-    event: 'page',
-    referrer: document.referrer,
-    ...window.location,
-    ...params
-  });
+  track({ event: 'page', ...params });
 };

@@ -42,7 +42,9 @@ var track = /*#__PURE__*/function () {
               });
             }
 
-            trackEvents.push(_objectSpread(_objectSpread(_objectSpread({}, baseProps), event), {}, {
+            trackEvents.push(_objectSpread(_objectSpread(_objectSpread(_objectSpread({}, baseProps), event), {}, {
+              referrer: document.referrer
+            }, window.location), {}, {
               id: (0, _v["default"])(),
               clientAnonymousId: (0, _componentCookie["default"])(COOKIE_ID),
               clientTimestamp: new Date().toJSON()
@@ -171,19 +173,17 @@ var identify = function identify(email) {
 exports.identify = identify;
 
 var event = function event(name, params) {
-  track(_objectSpread(_objectSpread({
-    event: name,
-    referrer: document.referrer
-  }, window.location), params));
+  track(_objectSpread({
+    event: name
+  }, params));
 };
 
 exports.event = event;
 
 var page = function page(params) {
-  track(_objectSpread(_objectSpread({
-    event: 'page',
-    referrer: document.referrer
-  }, window.location), params));
+  track(_objectSpread({
+    event: 'page'
+  }, params));
 };
 
 exports.page = page;
