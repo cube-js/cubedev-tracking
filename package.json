@@ -4,18 +4,18 @@
   "description": "Tracker of anonymized for cube.dev and related websites",
   "main": "index.js",
   "dependencies": {
-    "@babel/runtime": "^7.11.0",
     "component-cookie": "^1.1.4",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
-    "@babel/cli": "^7.10.4",
-    "@babel/core": "^7.10.4",
-    "@babel/plugin-transform-runtime": "^7.11.0",
-    "@babel/preset-env": "^7.10.4"
+    "@rollup/plugin-commonjs": "^17.1.0",
+    "@rollup/plugin-node-resolve": "^11.2.0",
+    "rollup": "^2.40.0",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-node-polyfills": "^0.2.1"
   },
   "scripts": {
-    "build": "./node_modules/.bin/babel src --out-file index.js"
+    "rollup": "./node_modules/.bin/rollup -c"
   },
   "author": "Cube Dev, Inc.",
   "license": "MIT"

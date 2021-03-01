@@ -1,5 +1,6 @@
-import cookie from 'component-cookie';
-import uuidv4 from 'uuid/v4';
+const cookie = require('component-cookie');
+const uuidv4  = require( 'uuid/v4');
+
 
 let flushPromise = null;
 let trackEvents = [];
@@ -9,9 +10,37 @@ const COOKIE_ID = "cubedev_anonymous";
 const COOKIE_DOMAIN = ".cube.dev";
 const MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
 
+function setCookie(name, value, options) {
+
+  const encode = function(value){
+    try {
+      return encodeURIComponent(value);
+    } catch (e) {
+      debug('error `encode(%o)` - %o', value, e)
+    }
+  }
+  options = options || {};
+  var str = encode(name) + '=' + encode(value);
+
+  if (null == value) options.maxage = -1;
+
+  if (options.maxage) {
+    options.expires = new Date(+new Date + options.maxage);
+  }
+
+  if (options.path) str += '; path=' + options.path;
+  if (options.domain) str += '; domain=' + options.domain;
+  if (options.expires) str += '; expires=' + options.expires.toUTCString();
+  if (options.secure) str += '; secure';
+  if (options.sameSite) str += '; SameSite=' + options.sameSite;
+
+  document.cookie = str;
+}
+
 const track = async (event) => {
+  debugger
   if (!cookie(COOKIE_ID)) {
-    cookie(COOKIE_ID, uuidv4(), { domain: COOKIE_DOMAIN, maxage: MAX_AGE });
+    setCookie(COOKIE_ID, uuidv4(), { domain: COOKIE_DOMAIN, maxage: MAX_AGE, sameSite: 'None', secure:true });
   }
   trackEvents.push({
     ...baseProps,
@@ -61,19 +90,52 @@ const track = async (event) => {
   return flushPromise;
 };
 
-export const setAnonymousId = (anonymousId, props) => {
+ const setAnonymousId = (anonymousId, props) => {
   baseProps = props;
   track({ event: 'identify', anonymousId, ...props });
 };
 
-export const identify = (email) => {
+ const identify = (email) => {
   track({ event: 'identify', email: email });
 };
 
-export const event = (name, params) => {
+ const event = (name, params) => {
   track({ event: name, ...params });
 };
 
-export const page = (params) => {
+ const page = (params) => {
   track({ event: 'page', ...params });
 };
+
+
+if(!window.cubeTrack){
+  window.cubeTrack = {}
+}
+
+const cubeTrack = {}
+Object.defineProperty(cubeTrack, "page", {
+  set: function(value) {
+    page(value)
+  }
+});
+Object.defineProperty(cubeTrack, "anonymous", {
+  set: function(value) {
+    setAnonymousId(value.id, {
+      email:value.email,
+      displayName: value.displayName
+    })
+  }
+});
+
+if(window.cubeTrack.page){
+  page(window.cubeTrack.page)
+}
+
+if(window.cubeTrack.anonymous){
+  setAnonymousId(window.cubeTrack.anonymous.id, {
+    email:window.cubeTrack.anonymous.email,
+    displayName: window.cubeTrack.anonymous.displayName
+  })
+}
+
+window.cubeTrack = cubeTrack
