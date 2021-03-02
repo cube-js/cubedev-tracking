@@ -15,14 +15,18 @@
   const COOKIE_DOMAIN = ".cube.dev";
   const MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
 
-  let myId = window.localStorage.getItem(COOKIE_ID)
-  if (!myId) {
-    myId = uuidv4()
-    window.localStorage.setItem(COOKIE_ID, myId)
+  let clientAnonymousId = window.localStorage.getItem(COOKIE_ID)
+  if (!clientAnonymousId) {
+    clientAnonymousId = uuidv4()
+    window.localStorage.setItem(COOKIE_ID, clientAnonymousId)
     // setCookie(COOKIE_ID, myId, { domain: COOKIE_DOMAIN, maxage: MAX_AGE, sameSite: 'None', secure:true, path:'/' });
   }
 
-  window.top.postMessage({trackId:myId}, '*')
+  window.onmessage = function(event){
+    console.log("onmessage set clientAnonymousId:", event.data)
+    window.localStorage.setItem(COOKIE_ID, event.data.clientAnonymousId)
+  };
+  window.top.postMessage({clientAnonymousId}, '*')
 </script>
 </body>
 </html>
