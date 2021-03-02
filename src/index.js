@@ -1,4 +1,3 @@
-const cookie = require('component-cookie');
 const uuidv4  = require( 'uuid/v4');
 
 
@@ -10,8 +9,19 @@ const COOKIE_ID = "cubedev_anonymous";
 const COOKIE_DOMAIN = ".cube.dev";
 const MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
 
+function getCookie(name) {
+  var matches = document.cookie.match(new RegExp(
+    "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+  ))
+  const res = matches ? decodeURIComponent(matches[1]) : undefined
+  window.console.log(`getCookie: ${name}`, res)
+  debugger
+  return res;
+}
+
 function setCookie(name, value, options) {
 
+  window.console.log(`setCookie: ${name} = ${value}`, options)
   const encode = function(value){
     try {
       return encodeURIComponent(value);
@@ -38,9 +48,9 @@ function setCookie(name, value, options) {
 }
 
 const track = async (event) => {
-  debugger
-  if (!cookie(COOKIE_ID)) {
-    setCookie(COOKIE_ID, uuidv4(), { domain: COOKIE_DOMAIN, maxage: MAX_AGE, sameSite: 'None', secure:true });
+  // debugger
+  if (!getCookie(COOKIE_ID)) {
+    setCookie(COOKIE_ID, uuidv4(), { domain: COOKIE_DOMAIN, maxage: MAX_AGE, sameSite: 'None', secure:true, path:'/' });
   }
   trackEvents.push({
     ...baseProps,
@@ -48,7 +58,7 @@ const track = async (event) => {
     referrer: document.referrer,
     ...window.location,
     id: uuidv4(),
-    clientAnonymousId: cookie(COOKIE_ID),
+    clientAnonymousId: getCookie(COOKIE_ID),
     clientTimestamp: new Date().toJSON()
   });
   const flush = async (toFlush, retries) => {
@@ -127,15 +137,26 @@ Object.defineProperty(cubeTrack, "anonymous", {
   }
 });
 
-if(window.cubeTrack.page){
-  page(window.cubeTrack.page)
-}
+window.onmessage = function(event){
+  debugger
+  console.log("onmessage:", event.data)
 
-if(window.cubeTrack.anonymous){
-  setAnonymousId(window.cubeTrack.anonymous.id, {
-    email:window.cubeTrack.anonymous.email,
-    displayName: window.cubeTrack.anonymous.displayName
-  })
-}
+  if(window.cubeTrack.page){
+    page(window.cubeTrack.page)
+  }
 
-window.cubeTrack = cubeTrack
+  if(window.cubeTrack.anonymous){
+    setAnonymousId(window.cubeTrack.anonymous.id, {
+      email:window.cubeTrack.anonymous.email,
+      displayName: window.cubeTrack.anonymous.displayName
+    })
+  }
+
+  window.cubeTrack = cubeTrack
+
+};
+
+const cubeTrackFrame = document.createElement('iframe');
+// cubeTrackFrame.sandbox="allow-scripts"
+cubeTrackFrame.setAttribute('src','https://cube.dev/cubedev-tracking/id.html');
+document.body.appendChild(cubeTrackFrame);
