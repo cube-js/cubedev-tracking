@@ -1,25 +1,22 @@
-import cookie from 'component-cookie';
 import uuidv4 from 'uuid/v4';
 
 let flushPromise = null;
 let trackEvents = [];
 let baseProps = {};
-
-const COOKIE_ID = "cubedev_anonymous";
-const COOKIE_DOMAIN = ".cube.dev";
-const MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
+let clientAnonymousId = undefined;
 
 const track = async (event) => {
-  if (!cookie(COOKIE_ID)) {
-    cookie(COOKIE_ID, uuidv4(), { domain: COOKIE_DOMAIN, maxage: MAX_AGE });
+  if(!clientAnonymousId){
+    return setTimeout(track, 500, event)
   }
+
   trackEvents.push({
     ...baseProps,
     ...event,
     referrer: document.referrer,
     ...window.location,
     id: uuidv4(),
-    clientAnonymousId: cookie(COOKIE_ID),
+    clientAnonymousId,
     clientTimestamp: new Date().toJSON()
   });
   const flush = async (toFlush, retries) => {
@@ -77,3 +74,15 @@ export const event = (name, params) => {
 export const page = (params) => {
   track({ event: 'page', ...params });
 };
+
+
+window.addEventListener("message", function(event){
+  if(event.data && event.data.clientAnonymousId ){
+    clientAnonymousId = event.data.clientAnonymousId
+  }
+}, { passive: true });
+
+const cubeTrackFrame = document.createElement('iframe');
+cubeTrackFrame.setAttribute('src','http://localhost:8000/scripts/id.js');
+cubeTrackFrame.style.display = 'none'
+document.body.appendChild(cubeTrackFrame);

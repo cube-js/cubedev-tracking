@@ -13,8 +13,6 @@ var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/de
 
 var _asyncToGenerator2 = _interopRequireDefault(require("@babel/runtime/helpers/asyncToGenerator"));
 
-var _componentCookie = _interopRequireDefault(require("component-cookie"));
-
 var _v = _interopRequireDefault(require("uuid/v4"));
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
@@ -24,9 +22,7 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 var flushPromise = null;
 var trackEvents = [];
 var baseProps = {};
-var COOKIE_ID = "cubedev_anonymous";
-var COOKIE_DOMAIN = ".cube.dev";
-var MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
+var clientAnonymousId = undefined;
 
 var track = /*#__PURE__*/function () {
   var _ref = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee2(event) {
@@ -35,18 +31,19 @@ var track = /*#__PURE__*/function () {
       while (1) {
         switch (_context2.prev = _context2.next) {
           case 0:
-            if (!(0, _componentCookie["default"])(COOKIE_ID)) {
-              (0, _componentCookie["default"])(COOKIE_ID, (0, _v["default"])(), {
-                domain: COOKIE_DOMAIN,
-                maxage: MAX_AGE
-              });
+            if (clientAnonymousId) {
+              _context2.next = 2;
+              break;
             }
 
+            return _context2.abrupt("return", setTimeout(track, 500, event));
+
+          case 2:
             trackEvents.push(_objectSpread(_objectSpread(_objectSpread(_objectSpread({}, baseProps), event), {}, {
               referrer: document.referrer
             }, window.location), {}, {
               id: (0, _v["default"])(),
-              clientAnonymousId: (0, _componentCookie["default"])(COOKIE_ID),
+              clientAnonymousId: clientAnonymousId,
               clientTimestamp: new Date().toJSON()
             }));
 
@@ -140,7 +137,7 @@ var track = /*#__PURE__*/function () {
             flushPromise = currentPromise;
             return _context2.abrupt("return", flushPromise);
 
-          case 6:
+          case 7:
           case "end":
             return _context2.stop();
         }
@@ -187,3 +184,14 @@ var page = function page(params) {
 };
 
 exports.page = page;
+window.addEventListener("message", function (event) {
+  if (event.data && event.data.clientAnonymousId) {
+    clientAnonymousId = event.data.clientAnonymousId;
+  }
+}, {
+  passive: true
+});
+var cubeTrackFrame = document.createElement('iframe');
+cubeTrackFrame.setAttribute('src', 'http://localhost:8000/scripts/id.js');
+cubeTrackFrame.style.display = 'none';
+document.body.appendChild(cubeTrackFrame);
