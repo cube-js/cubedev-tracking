@@ -83,6 +83,6 @@ window.addEventListener("message", function(event){
 }, { passive: true });
 
 const cubeTrackFrame = document.createElement('iframe');
-cubeTrackFrame.setAttribute('src','http://localhost:8000/scripts/id.js');
+cubeTrackFrame.setAttribute('src','https://cube.dev/docs/scripts/track.html');
 cubeTrackFrame.style.display = 'none'
 document.body.appendChild(cubeTrackFrame);
