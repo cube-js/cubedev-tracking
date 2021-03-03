@@ -22,7 +22,39 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 var flushPromise = null;
 var trackEvents = [];
 var baseProps = {};
-var clientAnonymousId = undefined;
+var clientAnonymousId;
+
+var getCookie = function getCookie(name) {
+  var matches = window.document.cookie.match(new RegExp("(?:^|; )".concat(name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1'), "=([^;]*)") // eslint-disable-line
+  ));
+  var res = matches ? decodeURIComponent(matches[1]) : undefined;
+  return res;
+};
+
+var setCookie = function setCookie(name, value, options) {
+  var encode = function encode(v) {
+    try {
+      return encodeURIComponent(v);
+    } catch (e) {
+      return '';
+    }
+  };
+
+  options = options || {};
+  var str = "".concat(encode(name), "=").concat(encode(value));
+  if (value == null) options.maxage = -1;
+
+  if (options.maxage) {
+    options.expires = new Date(+new Date() + options.maxage);
+  }
+
+  if (options.path) str += "; path=".concat(options.path);
+  if (options.domain) str += "; domain=".concat(options.domain);
+  if (options.expires) str += "; expires=".concat(options.expires.toUTCString());
+  if (options.secure) str += '; secure';
+  if (options.sameSite) str += "; SameSite=".concat(options.sameSite);
+  window.document.cookie = str;
+};
 
 var track = /*#__PURE__*/function () {
   var _ref = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee2(event) {
@@ -40,7 +72,7 @@ var track = /*#__PURE__*/function () {
 
           case 2:
             trackEvents.push(_objectSpread(_objectSpread(_objectSpread(_objectSpread({}, baseProps), event), {}, {
-              referrer: document.referrer
+              referrer: window.document.referrer
             }, window.location), {}, {
               id: (0, _v["default"])(),
               clientAnonymousId: clientAnonymousId,
@@ -184,14 +216,33 @@ var page = function page(params) {
 };
 
 exports.page = page;
-window.addEventListener("message", function (event) {
-  if (event.data && event.data.clientAnonymousId) {
-    clientAnonymousId = event.data.clientAnonymousId;
+
+if (window.location.host === 'cube.dev') {
+  var COOKIE_ID = 'cubedev_anonymous';
+  var COOKIE_DOMAIN = '.cube.dev';
+  var MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
+
+  clientAnonymousId = getCookie(COOKIE_ID);
+
+  if (!clientAnonymousId) {
+    clientAnonymousId = (0, _v["default"])();
+    setCookie(COOKIE_ID, clientAnonymousId, {
+      domain: COOKIE_DOMAIN,
+      maxage: MAX_AGE,
+      secure: true,
+      sameSite: 'None'
+    });
   }
-}, {
-  passive: true
-});
-var cubeTrackFrame = document.createElement('iframe');
-cubeTrackFrame.setAttribute('src', 'https://cube.dev/docs/scripts/track.html');
-cubeTrackFrame.style.display = 'none';
-document.body.appendChild(cubeTrackFrame);
+} else {
+  window.addEventListener('message', function (e) {
+    if (e.data && e.data.clientAnonymousId) {
+      clientAnonymousId = e.data.clientAnonymousId;
+    }
+  }, {
+    passive: true
+  });
+  var cubeTrackFrame = window.document.createElement('iframe');
+  cubeTrackFrame.setAttribute('src', 'https://cube.dev/docs/scripts/track.html');
+  cubeTrackFrame.style.display = 'none';
+  window.document.body.appendChild(cubeTrackFrame);
+}

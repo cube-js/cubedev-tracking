@@ -1,19 +1,53 @@
+/* globals window, fetch */
 import uuidv4 from 'uuid/v4';
 
 let flushPromise = null;
 let trackEvents = [];
 let baseProps = {};
-let clientAnonymousId = undefined;
+let clientAnonymousId;
+const getCookie = name => {
+  const matches = window.document.cookie.match(new RegExp(
+    `(?:^|; )${name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1')}=([^;]*)` // eslint-disable-line
+  ));
+  const res = matches ? decodeURIComponent(matches[1]) : undefined;
+  return res;
+};
+
+const setCookie = (name, value, options) => {
+  const encode = v => {
+    try {
+      return encodeURIComponent(v);
+    } catch (e) {
+      return '';
+    }
+  };
+  options = options || {};
+  let str = `${encode(name)}=${encode(value)}`;
+
+  if (value == null) options.maxage = -1;
+
+  if (options.maxage) {
+    options.expires = new Date(+new Date() + options.maxage);
+  }
+
+  if (options.path) str += `; path=${options.path}`;
+  if (options.domain) str += `; domain=${options.domain}`;
+  if (options.expires) str += `; expires=${options.expires.toUTCString()}`;
+  if (options.secure) str += '; secure';
+  if (options.sameSite) str += `; SameSite=${options.sameSite}`;
+
+  window.document.cookie = str;
+};
 
 const track = async (event) => {
-  if(!clientAnonymousId){
-    return setTimeout(track, 500, event)
+  if (!clientAnonymousId) {
+    return setTimeout(track, 500, event);
   }
 
   trackEvents.push({
     ...baseProps,
     ...event,
-    referrer: document.referrer,
+    referrer: window.document.referrer,
     ...window.location,
     id: uuidv4(),
     clientAnonymousId,
@@ -64,7 +98,7 @@ export const setAnonymousId = (anonymousId, props) => {
 };
 
 export const identify = (email) => {
-  track({ event: 'identify', email: email });
+  track({ event: 'identify', email });
 };
 
 export const event = (name, params) => {
@@ -75,14 +109,27 @@ export const page = (params) => {
   track({ event: 'page', ...params });
 };
 
+if (window.location.host === 'cube.dev') {
+  const COOKIE_ID = 'cubedev_anonymous';
+  const COOKIE_DOMAIN = '.cube.dev';
+  const MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
 
-window.addEventListener("message", function(event){
-  if(event.data && event.data.clientAnonymousId ){
-    clientAnonymousId = event.data.clientAnonymousId
+  clientAnonymousId = getCookie(COOKIE_ID);
+  if (!clientAnonymousId) {
+    clientAnonymousId = uuidv4();
+    setCookie(COOKIE_ID, clientAnonymousId, {
+      domain: COOKIE_DOMAIN, maxage: MAX_AGE, secure: true, sameSite: 'None'
+    });
   }
-}, { passive: true });
+} else {
+  window.addEventListener('message', (e) => {
+    if (e.data && e.data.clientAnonymousId) {
+      clientAnonymousId = e.data.clientAnonymousId;
+    }
+  }, { passive: true });
 
-const cubeTrackFrame = document.createElement('iframe');
-cubeTrackFrame.setAttribute('src','https://cube.dev/docs/scripts/track.html');
-cubeTrackFrame.style.display = 'none'
-document.body.appendChild(cubeTrackFrame);
+  const cubeTrackFrame = window.document.createElement('iframe');
+  cubeTrackFrame.setAttribute('src', 'https://cube.dev/docs/scripts/track.html');
+  cubeTrackFrame.style.display = 'none';
+  window.document.body.appendChild(cubeTrackFrame);
+}
