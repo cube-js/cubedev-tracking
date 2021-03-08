@@ -1,21 +1,27 @@
 {
   "name": "cubedev-tracking",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Tracker of anonymized for cube.dev and related websites",
   "main": "index.js",
   "dependencies": {
     "@babel/runtime": "^7.11.0",
-    "component-cookie": "^1.1.4",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.10.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-node": "^11.1.0",
     "@babel/cli": "^7.10.4",
     "@babel/core": "^7.10.4",
     "@babel/plugin-transform-runtime": "^7.11.0",
     "@babel/preset-env": "^7.10.4"
   },
   "scripts": {
-    "build": "./node_modules/.bin/babel src --out-file index.js"
+    "build": "./node_modules/.bin/babel src --out-file index.js",
+    "lint": "GLOBIGNORE='**/node_modules/**' eslint \"./src/*.js\"",
+    "fix": "GLOBIGNORE='**/node_modules/**' eslint \"./src/*.js\" --fix"
   },
   "author": "Cube Dev, Inc.",
   "license": "MIT"
