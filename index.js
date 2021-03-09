@@ -19,6 +19,10 @@ function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (O
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { (0, _defineProperty2["default"])(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
+var COOKIE_ID = 'cubedev_anonymous';
+var COOKIE_DOMAIN = '.cube.dev';
+var MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
+
 var flushPromise = null;
 var trackEvents = [];
 var baseProps = {};
@@ -216,33 +220,67 @@ var page = function page(params) {
 };
 
 exports.page = page;
+clientAnonymousId = getCookie(COOKIE_ID);
 
-if (window.location.host === 'cube.dev') {
-  var COOKIE_ID = 'cubedev_anonymous';
-  var COOKIE_DOMAIN = '.cube.dev';
-  var MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
+if (!clientAnonymousId) {
+  fetch("https://comet-server.com/doc/cookie", {
+    credentials: 'include',
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({})
+  }).then( /*#__PURE__*/function () {
+    var _ref3 = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee3(response) {
+      var answer;
+      return _regenerator["default"].wrap(function _callee3$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              _context3.next = 2;
+              return response.json();
 
-  clientAnonymousId = getCookie(COOKIE_ID);
+            case 2:
+              answer = _context3.sent;
+              console.log(answer);
+              clientAnonymousId = answer.id;
+              setCookie(COOKIE_ID, clientAnonymousId, {
+                maxage: MAX_AGE,
+                secure: true,
+                sameSite: 'None'
+              });
 
-  if (!clientAnonymousId) {
-    clientAnonymousId = (0, _v["default"])();
-    setCookie(COOKIE_ID, clientAnonymousId, {
-      domain: COOKIE_DOMAIN,
-      maxage: MAX_AGE,
-      secure: true,
-      sameSite: 'None'
-    });
-  }
-} else {
-  window.addEventListener('message', function (e) {
-    if (e.data && e.data.clientAnonymousId) {
-      clientAnonymousId = e.data.clientAnonymousId;
-    }
-  }, {
-    passive: true
-  });
-  var cubeTrackFrame = window.document.createElement('iframe');
-  cubeTrackFrame.setAttribute('src', 'https://cube.dev/docs/scripts/track.html');
-  cubeTrackFrame.style.display = 'none';
-  window.document.body.appendChild(cubeTrackFrame);
-}
+            case 6:
+            case "end":
+              return _context3.stop();
+          }
+        }
+      }, _callee3);
+    }));
+
+    return function (_x4) {
+      return _ref3.apply(this, arguments);
+    };
+  }());
+} //
+// if (window.location.host === 'cube.dev') {
+//
+//   clientAnonymousId = getCookie(COOKIE_ID);
+//   if (!clientAnonymousId) {
+//     clientAnonymousId = uuidv4();
+//     setCookie(COOKIE_ID, clientAnonymousId, {
+//       domain: COOKIE_DOMAIN, maxage: MAX_AGE, secure: true, sameSite: 'None'
+//     });
+//   }
+// } else {
+//   window.addEventListener('message', (e) => {
+//     if (e.data && e.data.clientAnonymousId) {
+//       clientAnonymousId = e.data.clientAnonymousId;
+//     }
+//   }, { passive: true });
+//
+//   const cubeTrackFrame = window.document.createElement('iframe');
+//   cubeTrackFrame.setAttribute('src', 'https://cube.dev/docs/scripts/track.html');
+//   cubeTrackFrame.style.display = 'none';
+//   window.document.body.appendChild(cubeTrackFrame);
+// }

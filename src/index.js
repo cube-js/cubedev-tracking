@@ -1,6 +1,10 @@
 /* globals window, fetch */
 import uuidv4 from 'uuid/v4';
 
+const COOKIE_ID = 'cubedev_anonymous';
+const COOKIE_DOMAIN = '.cube.dev';
+const MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
+
 let flushPromise = null;
 let trackEvents = [];
 let baseProps = {};
@@ -109,27 +113,45 @@ export const page = (params) => {
   track({ event: 'page', ...params });
 };
 
-if (window.location.host === 'cube.dev') {
-  const COOKIE_ID = 'cubedev_anonymous';
-  const COOKIE_DOMAIN = '.cube.dev';
-  const MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
-
-  clientAnonymousId = getCookie(COOKIE_ID);
-  if (!clientAnonymousId) {
-    clientAnonymousId = uuidv4();
-    setCookie(COOKIE_ID, clientAnonymousId, {
-      domain: COOKIE_DOMAIN, maxage: MAX_AGE, secure: true, sameSite: 'None'
+clientAnonymousId = getCookie(COOKIE_ID);
+if (!clientAnonymousId) {
+  fetch("https://test-cookie.comet-server.com", {
+    credentials: 'include',
+    method: 'post',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+  })
+    .then(async response => {
+      let answer = await response.json()
+      console.log(answer)
+      clientAnonymousId = answer.id
+      setCookie(COOKIE_ID, clientAnonymousId, {
+        maxage: MAX_AGE,
+        secure: true,
+        sameSite: 'None'
+      });
     });
-  }
-} else {
-  window.addEventListener('message', (e) => {
-    if (e.data && e.data.clientAnonymousId) {
-      clientAnonymousId = e.data.clientAnonymousId;
-    }
-  }, { passive: true });
-
-  const cubeTrackFrame = window.document.createElement('iframe');
-  cubeTrackFrame.setAttribute('src', 'https://cube.dev/docs/scripts/track.html');
-  cubeTrackFrame.style.display = 'none';
-  window.document.body.appendChild(cubeTrackFrame);
 }
+
+//
+// if (window.location.host === 'cube.dev') {
+//
+//   clientAnonymousId = getCookie(COOKIE_ID);
+//   if (!clientAnonymousId) {
+//     clientAnonymousId = uuidv4();
+//     setCookie(COOKIE_ID, clientAnonymousId, {
+//       domain: COOKIE_DOMAIN, maxage: MAX_AGE, secure: true, sameSite: 'None'
+//     });
+//   }
+// } else {
+//   window.addEventListener('message', (e) => {
+//     if (e.data && e.data.clientAnonymousId) {
+//       clientAnonymousId = e.data.clientAnonymousId;
+//     }
+//   }, { passive: true });
+//
+//   const cubeTrackFrame = window.document.createElement('iframe');
+//   cubeTrackFrame.setAttribute('src', 'https://cube.dev/docs/scripts/track.html');
+//   cubeTrackFrame.style.display = 'none';
+//   window.document.body.appendChild(cubeTrackFrame);
+// }
