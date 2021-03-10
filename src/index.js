@@ -1,13 +1,15 @@
 import cookie from 'component-cookie';
 import uuidv4 from 'uuid/v4';
+import topDomain from './topDomain'
 
-const topDomain = require('@segment/top-domain');
 let flushPromise = null;
 let trackEvents = [];
 let baseProps = {};
 
 const COOKIE_ID = "cubedev_anonymous";
-const COOKIE_DOMAIN = '.' + topDomain(window.location.href);
+const topDomainValue = topDomain(window.location.href);
+const COOKIE_DOMAIN = topDomainValue ? '.' + topDomainValue : window.location.hostname;
+
 const MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
 
 const track = async (event) => {
