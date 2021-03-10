@@ -9,7 +9,6 @@ let baseProps = {};
 const COOKIE_ID = "cubedev_anonymous";
 const topDomainValue = topDomain(window.location.href);
 const COOKIE_DOMAIN = topDomainValue ? '.' + topDomainValue : window.location.hostname;
-
 const MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
 
 const track = async (event) => {
