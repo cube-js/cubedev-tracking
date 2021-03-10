@@ -17,8 +17,6 @@ var _componentCookie = _interopRequireDefault(require("component-cookie"));
 
 var _v = _interopRequireDefault(require("uuid/v4"));
 
-var _topDomain = _interopRequireDefault(require("./topDomain"));
-
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { (0, _defineProperty2["default"])(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
@@ -26,8 +24,45 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 var flushPromise = null;
 var trackEvents = [];
 var baseProps = {};
+
+var getLevels = function getLevels(hostname) {
+  var parts = hostname.split('.');
+  var last = parts[parts.length - 1];
+  var levels = []; // Ip address.
+
+  if (parts.length === 4 && last === parseInt(last, 10)) return levels; // Localhost.
+
+  if (parts.length <= 1) return levels; // Create levels.
+
+  for (var i = parts.length - 2; i >= 0; --i) {
+    levels.push(parts.slice(i).join('.'));
+  }
+
+  return levels;
+};
+
+var topDomain = function topDomain(hostname) {
+  var levels = getLevels(hostname); // Lookup the real top level one.
+
+  for (var i = 0; i < levels.length; ++i) {
+    var cname = '__tld__';
+    var domain = levels[i];
+    var opts = {
+      domain: '.' + domain
+    };
+    (0, _componentCookie["default"])(cname, 1, opts);
+
+    if ((0, _componentCookie["default"])(cname)) {
+      (0, _componentCookie["default"])(cname, null, opts);
+      return domain;
+    }
+  }
+
+  return '';
+};
+
 var COOKIE_ID = "cubedev_anonymous";
-var topDomainValue = (0, _topDomain["default"])(window.location.href);
+var topDomainValue = topDomain(window.location.hostname);
 var COOKIE_DOMAIN = topDomainValue ? '.' + topDomainValue : window.location.hostname;
 var MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
 
@@ -190,64 +225,3 @@ var page = function page(params) {
 };
 
 exports.page = page;
-'use strict';
-
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports["default"] = void 0;
-
-var _componentCookie = _interopRequireDefault(require("component-cookie"));
-
-var _componentUrl = require("component-url");
-
-function getLevels(url) {
-  var host = (0, _componentUrl.parse)(url).hostname;
-  var parts = host.split('.');
-  var last = parts[parts.length - 1];
-  var levels = []; // Ip address.
-
-  if (parts.length === 4 && last === parseInt(last, 10)) {
-    return levels;
-  } // Localhost.
-
-
-  if (parts.length <= 1) {
-    return levels;
-  } // Create levels.
-
-
-  for (var i = parts.length - 2; i >= 0; --i) {
-    levels.push(parts.slice(i).join('.'));
-  }
-
-  return levels;
-}
-
-;
-
-function topDomain(url) {
-  var levels = getLevels(url); // Lookup the real top level one.
-
-  for (var i = 0; i < levels.length; ++i) {
-    var cname = '__tld__';
-    var domain = levels[i];
-    var opts = {
-      domain: '.' + domain
-    };
-    (0, _componentCookie["default"])(cname, 1, opts);
-
-    if ((0, _componentCookie["default"])(cname)) {
-      (0, _componentCookie["default"])(cname, null, opts);
-      return domain;
-    }
-  }
-
-  return '';
-}
-
-;
-var _default = topDomain;
-exports["default"] = _default;

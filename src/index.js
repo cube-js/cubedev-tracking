@@ -1,13 +1,47 @@
 import cookie from 'component-cookie';
 import uuidv4 from 'uuid/v4';
-import topDomain from './topDomain'
 
 let flushPromise = null;
 let trackEvents = [];
 let baseProps = {};
 
+const getLevels = hostname => {
+  const parts = hostname.split('.');
+  const last = parts[parts.length - 1];
+  const levels = [];
+
+  // Ip address.
+  if (parts.length === 4 && last === parseInt(last, 10)) return levels;
+  // Localhost.
+  if (parts.length <= 1) return levels;
+  // Create levels.
+  for (let i = parts.length - 2; i >= 0; --i) {
+    levels.push(parts.slice(i).join('.'));
+  }
+
+  return levels;
+};
+
+const topDomain = hostname =>  {
+  const levels = getLevels(hostname);
+  // Lookup the real top level one.
+  for (var i = 0; i < levels.length; ++i) {
+    const cname = '__tld__';
+    const domain = levels[i];
+    const opts = { domain: '.' + domain };
+
+    cookie(cname, 1, opts);
+    if (cookie(cname)) {
+      cookie(cname, null, opts);
+      return domain;
+    }
+  }
+
+  return '';
+};
+
 const COOKIE_ID = "cubedev_anonymous";
-const topDomainValue = topDomain(window.location.href);
+const topDomainValue = topDomain(window.location.hostname);
 const COOKIE_DOMAIN = topDomainValue ? '.' + topDomainValue : window.location.hostname;
 const MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
 
