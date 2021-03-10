@@ -1,10 +1,11 @@
 {
   "name": "cubedev-tracking",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Tracker of anonymized for cube.dev and related websites",
   "main": "index.js",
   "dependencies": {
     "@babel/runtime": "^7.11.0",
+    "@segment/top-domain": "^3.0.0",
     "component-cookie": "^1.1.4",
     "uuid": "^3.3.3"
   },
