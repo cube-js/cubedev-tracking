@@ -24,8 +24,46 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 var flushPromise = null;
 var trackEvents = [];
 var baseProps = {};
+
+var getLevels = function getLevels(hostname) {
+  var parts = hostname.split('.');
+  var last = parts[parts.length - 1];
+  var levels = []; // Ip address.
+
+  if (parts.length === 4 && last === parseInt(last, 10)) return levels; // Localhost.
+
+  if (parts.length <= 1) return levels; // Create levels.
+
+  for (var i = parts.length - 2; i >= 0; --i) {
+    levels.push(parts.slice(i).join('.'));
+  }
+
+  return levels;
+};
+
+var topDomain = function topDomain(hostname) {
+  var levels = getLevels(hostname); // Lookup the real top level one.
+
+  for (var i = 0; i < levels.length; ++i) {
+    var cname = '__tld__';
+    var domain = levels[i];
+    var opts = {
+      domain: '.' + domain
+    };
+    (0, _componentCookie["default"])(cname, 1, opts);
+
+    if ((0, _componentCookie["default"])(cname)) {
+      (0, _componentCookie["default"])(cname, null, opts);
+      return domain;
+    }
+  }
+
+  return '';
+};
+
 var COOKIE_ID = "cubedev_anonymous";
-var COOKIE_DOMAIN = ".cube.dev";
+var topDomainValue = topDomain(window.location.hostname);
+var COOKIE_DOMAIN = topDomainValue ? '.' + topDomainValue : window.location.hostname;
 var MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
 
 var track = /*#__PURE__*/function () {
