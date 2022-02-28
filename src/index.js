@@ -5,7 +5,7 @@ let flushPromise = null;
 let trackEvents = [];
 let baseProps = {};
 
-const getLevels = hostname => {
+const getLevels = (hostname) => {
   const parts = hostname.split('.');
   const last = parts[parts.length - 1];
   const levels = [];
@@ -22,7 +22,7 @@ const getLevels = hostname => {
   return levels;
 };
 
-const topDomain = hostname =>  {
+const topDomain = (hostname) => {
   const levels = getLevels(hostname);
   // Lookup the real top level one.
   for (var i = 0; i < levels.length; ++i) {
@@ -40,14 +40,34 @@ const topDomain = hostname =>  {
   return '';
 };
 
-const COOKIE_ID = "cubedev_anonymous";
+const getCookieId = async () => {
+  try {
+    const r = await fetch('https://identity.cube.dev', {
+      credentials: 'include',
+    });
+    if (r.status >= 400) {
+      throw new Error('failed request to identity service');
+    }
+    return r.text();
+  } catch (ex) {
+    console.error(ex);
+    return uuidv4();
+  }
+};
+
+const COOKIE_ID = 'cubedev_anonymous';
 const topDomainValue = topDomain(window.location.hostname);
-const COOKIE_DOMAIN = topDomainValue ? '.' + topDomainValue : window.location.hostname;
+const COOKIE_DOMAIN = topDomainValue
+  ? '.' + topDomainValue
+  : window.location.hostname;
 const MAX_AGE = 365 * 24 * 60 * 60 * 1000; // 1 year
 
 const track = async (event) => {
   if (!cookie(COOKIE_ID)) {
-    cookie(COOKIE_ID, uuidv4(), { domain: COOKIE_DOMAIN, maxage: MAX_AGE });
+    cookie(COOKIE_ID, await getCookieId(), {
+      domain: COOKIE_DOMAIN,
+      maxage: MAX_AGE,
+    });
   }
   trackEvents.push({
     ...baseProps,
@@ -56,7 +76,7 @@ const track = async (event) => {
     ...window.location,
     id: uuidv4(),
     clientAnonymousId: cookie(COOKIE_ID),
-    clientTimestamp: new Date().toJSON()
+    clientTimestamp: new Date().toJSON(),
   });
   const flush = async (toFlush, retries) => {
     if (!toFlush) {
@@ -73,7 +93,7 @@ const track = async (event) => {
       const sentAt = new Date().toJSON();
       const result = await fetch('https://track.cube.dev/track', {
         method: 'post',
-        body: JSON.stringify(toFlush.map(r => ({ ...r, sentAt }))),
+        body: JSON.stringify(toFlush.map((r) => ({ ...r, sentAt }))),
         headers: { 'Content-Type': 'application/json' },
       });
       if (result.status !== 200 && retries > 0) {
@@ -88,11 +108,13 @@ const track = async (event) => {
     }
     return null;
   };
-  const currentPromise = (flushPromise || Promise.resolve()).then(() => flush()).then(() => {
-    if (currentPromise === flushPromise) {
-      flushPromise = null;
-    }
-  });
+  const currentPromise = (flushPromise || Promise.resolve())
+    .then(() => flush())
+    .then(() => {
+      if (currentPromise === flushPromise) {
+        flushPromise = null;
+      }
+    });
   flushPromise = currentPromise;
   return flushPromise;
 };
